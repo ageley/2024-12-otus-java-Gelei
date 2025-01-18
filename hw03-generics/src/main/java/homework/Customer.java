@@ -18,6 +18,12 @@ public class Customer {
     @Setter
     private long scores;
 
+    public Customer(Customer customer) {
+        this.id = customer.getId();
+        this.name = customer.getName();
+        this.scores = customer.getScores();
+    }
+
     @Override
     public String toString() {
         return "Customer{" + "id=" + id + ", name='" + name + '\'' + ", scores=" + scores + '}';
