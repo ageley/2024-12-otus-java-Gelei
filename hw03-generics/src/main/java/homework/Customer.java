@@ -2,7 +2,6 @@ package homework;
 
 import java.util.Objects;
 
-@SuppressWarnings({"java:S1135"}) // при выполнении ДЗ эту аннотацию надо удалить
 public class Customer {
     private final long id;
     private String name;
