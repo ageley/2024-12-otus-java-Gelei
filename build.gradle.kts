@@ -95,6 +95,7 @@ subprojects {
     tasks.withType<Test> {
         useJUnitPlatform()
         testLogging.showExceptions = true
+        testLogging.events( "PASSED", "SKIPPED", "FAILED", "STANDARD_OUT", "STANDARD_ERROR")
         reports {
             junitXml.required.set(true)
             html.required.set(true)
