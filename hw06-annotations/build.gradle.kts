@@ -9,5 +9,5 @@ plugins {
 }
 
 application {
-    mainClass = "ru.otus.homework.test.util.TestRunner"
+    mainClass = "ru.otus.homework.test.util.Application"
 }

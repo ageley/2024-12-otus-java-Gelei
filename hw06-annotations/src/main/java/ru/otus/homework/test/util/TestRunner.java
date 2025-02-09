@@ -5,16 +5,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestRunner {
-    public static void main(String[] args)
-            throws ClassNotFoundException, InvocationTargetException, NoSuchMethodException, InstantiationException,
-                    IllegalAccessException {
-        runTests(args[0]);
-    }
-
     /**
      * @param testInstance a test class instance to be used for a method invocation.
      * @param method       a method to be invoked.
@@ -96,7 +93,7 @@ public class TestRunner {
      *
      * @param testClassName a fully qualified class name with tests to be run.
      */
-    private static void runTests(String testClassName)
+    public static void runTests(String testClassName)
             throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException,
                     IllegalAccessException {
         Class<?> testClass = Class.forName(testClassName);
