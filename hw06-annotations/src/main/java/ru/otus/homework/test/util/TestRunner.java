@@ -1,7 +1,6 @@
 package ru.otus.homework.test.util;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,22 +12,30 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestRunner {
     /**
+     * @param e          a reflective operation exception
+     * @param operationName an operation thrown an exception
+     */
+    private static void logError(Exception e, String operationName) {
+        log.error("FAILED - {}", operationName);
+        log.error(e.getCause().getMessage(), e.getCause());
+    }
+
+    /**
      * @param testInstance a test class instance to be used for a method invocation.
      * @param method       a method to be invoked.
      * @return True if no exceptions were thrown, False otherwise.
      */
     private static boolean checkInvokeMethod(Object testInstance, Method method) {
-        log.info("{} - STARTED", method.getName());
+        log.info("STARTED - {}", method.getName());
 
         try {
             method.invoke(testInstance);
         } catch (Exception e) {
-            log.error("{} - FAILED", method.getName());
-            log.error(e.getCause().getMessage(), e.getCause());
+            logError(e, method.getName());
             return false;
         }
 
-        log.info("{} - FINISHED", method.getName());
+        log.info("FINISHED - {}", method.getName());
         return true;
     }
 
@@ -78,11 +85,11 @@ public class TestRunner {
      */
     private static boolean checkInvokeTestMethod(
             Object testInstance, Method method, List<Method> beforeMethods, List<Method> afterMethods) {
-        log.info("{}: BEGIN", method.getName());
+        log.info("BEGIN: {}", method.getName());
         boolean result =
                 (!checkInvokeBeforeMethods(testInstance, beforeMethods) || !checkInvokeMethod(testInstance, method))
                         && checkInvokeAfterMethods(testInstance, afterMethods);
-        log.info("{}: END", method.getName());
+        log.info("END: {}", method.getName());
         return result;
     }
 
@@ -93,10 +100,16 @@ public class TestRunner {
      *
      * @param testClassName a fully qualified class name with tests to be run.
      */
-    public static void runTests(String testClassName)
-            throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, InstantiationException,
-                    IllegalAccessException {
-        Class<?> testClass = Class.forName(testClassName);
+    public static void runTests(String testClassName) {
+        Class<?> testClass;
+
+        try {
+            testClass = Class.forName(testClassName);
+        } catch (Exception e) {
+            logError(e, testClassName);
+            return;
+        }
+
         Method[] methods = testClass.getDeclaredMethods();
         List<Method> testMethods = new ArrayList<>();
         List<Method> beforeMethods = new ArrayList<>();
@@ -120,7 +133,17 @@ public class TestRunner {
         int fail = 0;
 
         for (Method method : testMethods) {
-            if (checkInvokeTestMethod(testClass.getConstructor().newInstance(), method, beforeMethods, afterMethods)) {
+            Object testInstance;
+
+            try {
+                testInstance = testClass.getConstructor().newInstance();
+            } catch (Exception e) {
+                logError(e, method.getName());
+                fail++;
+                break;
+            }
+
+            if (checkInvokeTestMethod(testInstance, method, beforeMethods, afterMethods)) {
                 pass++;
             } else {
                 fail++;
