@@ -4,18 +4,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestRunner {
     /**
-     * @param e          a reflective operation exception
+     * @param e             a reflective operation exception
      * @param operationName an operation thrown an exception
      */
-    private static void logError(Exception e, String operationName) {
+    private void logError(Exception e, String operationName) {
         log.error("FAILED - {}", operationName);
         log.error(e.getCause().getMessage(), e.getCause());
     }
@@ -25,7 +22,7 @@ public class TestRunner {
      * @param method       a method to be invoked.
      * @return True if no exceptions were thrown, False otherwise.
      */
-    private static boolean checkInvokeMethod(Object testInstance, Method method) {
+    private boolean checkInvokeMethod(Object testInstance, Method method) {
         log.info("STARTED - {}", method.getName());
 
         try {
@@ -45,7 +42,7 @@ public class TestRunner {
      * @return True if no exceptions were thrown, and False immediately after the first exception were thrown.
      */
     @SuppressWarnings("java:S3516")
-    private static boolean checkInvokeBeforeMethods(Object testInstance, List<Method> methods) {
+    private boolean checkInvokeBeforeMethods(Object testInstance, List<Method> methods) {
         for (Method method : methods) {
             if (!checkInvokeMethod(testInstance, method)) {
                 return false;
@@ -61,7 +58,7 @@ public class TestRunner {
      * @return True if no exceptions were thrown,
      * and False after all methods were invoked if any method had thrown an exception.
      */
-    private static boolean checkInvokeAfterMethods(Object testInstance, List<Method> methods) {
+    private boolean checkInvokeAfterMethods(Object testInstance, List<Method> methods) {
         boolean result = true;
 
         for (Method method : methods) {
@@ -83,7 +80,7 @@ public class TestRunner {
      * @param afterMethods  methods to be invoked after a test method.
      * @return True if no exceptions were thrown, and False if any method had thrown an exception.
      */
-    private static boolean checkInvokeTestMethod(
+    private boolean checkInvokeTestMethod(
             Object testInstance, Method method, List<Method> beforeMethods, List<Method> afterMethods) {
         log.info("BEGIN: {}", method.getName());
         boolean result =
@@ -94,20 +91,41 @@ public class TestRunner {
     }
 
     /**
+     * @param testClass     a class to instantiate a test instance from.
+     * @param testMethod    a test method to be invoked.
+     * @param beforeMethods methods to be invoked before a test method.
+     * @param afterMethods  methods to be invoked after a test method.
+     * @return True if no exceptions were thrown, and False if any method had thrown an exception.
+     */
+    public boolean runTest(
+            Class<?> testClass, Method testMethod, List<Method> beforeMethods, List<Method> afterMethods) {
+        Object testInstance;
+
+        try {
+            testInstance = testClass.getConstructor().newInstance();
+        } catch (Exception e) {
+            logError(e, testMethod.getName());
+            return false;
+        }
+
+        return checkInvokeTestMethod(testInstance, testMethod, beforeMethods, afterMethods);
+    }
+
+    /**
      * Parses methods from a class, annotated with {@link Test @Test}, {@link Before @Before} and {@link After @After},
      * and invokes them.
      * Calculates total/pass/fail tests count.
      *
      * @param testClassName a fully qualified class name with tests to be run.
      */
-    public static void runTests(String testClassName) {
+    public TestResult runTests(String testClassName) {
         Class<?> testClass;
 
         try {
             testClass = Class.forName(testClassName);
         } catch (Exception e) {
             logError(e, testClassName);
-            return;
+            return new TestResult(0, 0, 0);
         }
 
         Method[] methods = testClass.getDeclaredMethods();
@@ -132,18 +150,8 @@ public class TestRunner {
         int pass = 0;
         int fail = 0;
 
-        for (Method method : testMethods) {
-            Object testInstance;
-
-            try {
-                testInstance = testClass.getConstructor().newInstance();
-            } catch (Exception e) {
-                logError(e, method.getName());
-                fail++;
-                break;
-            }
-
-            if (checkInvokeTestMethod(testInstance, method, beforeMethods, afterMethods)) {
+        for (Method testMethod : testMethods) {
+            if (runTest(testClass, testMethod, beforeMethods, afterMethods)) {
                 pass++;
             } else {
                 fail++;
@@ -153,5 +161,7 @@ public class TestRunner {
         log.info("total: {}", total);
         log.info("pass: {}", pass);
         log.info("fail: {}", fail);
+
+        return new TestResult(total, pass, fail);
     }
 }
