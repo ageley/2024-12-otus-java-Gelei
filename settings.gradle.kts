@@ -1,6 +1,7 @@
 rootProject.name = "2024-12-otus-java-Gelei"
 include("hw01-gradle")
 include("hw03-generics")
+include("hw10-bytecodes")
 
 
 pluginManagement {
