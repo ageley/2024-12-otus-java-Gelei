@@ -8,8 +8,8 @@ class Demo {
     private final TestLoggingInterface testLoggingProxied;
 
     public Demo() {
-        this.testLogging = TestLoggingFactory.createTestLogging();
-        this.testLoggingProxied = TestLoggingFactory.createTestLoggingProxied();
+        this.testLogging = new TestLogging();
+        this.testLoggingProxied = TestLoggingFactory.createTestLoggingProxied(this.testLogging);
     }
 
     public void action() {

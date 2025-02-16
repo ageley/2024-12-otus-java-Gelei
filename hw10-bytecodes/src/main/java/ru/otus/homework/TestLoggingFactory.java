@@ -4,52 +4,45 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TestLoggingFactory {
-    public static TestLoggingInterface createTestLogging() {
-        return new TestLogging();
-    }
-
-    public static TestLoggingInterface createTestLoggingProxied() {
+    public static TestLoggingInterface createTestLoggingProxied(TestLoggingInterface testLogging) {
         return (TestLoggingInterface) Proxy.newProxyInstance(
                 TestLoggingFactory.class.getClassLoader(),
                 new Class<?>[] {TestLoggingInterface.class},
-                new LogInvocationHandler(new TestLogging()));
+                new LogInvocationHandler(testLogging));
     }
 
     @Slf4j
-    private static class TestLogging implements TestLoggingInterface {
-        @Log
-        @Override
-        public void calculation(int param1) {
-            log.info("calculation method with 1 param executed");
+    private static class LogInvocationHandler implements InvocationHandler {
+        private final TestLoggingInterface testLogging;
+        private final Set<Method> annotatedMethods;
+
+        @SneakyThrows(NoSuchMethodException.class) // Never trows NoSuchMethodException
+        private LogInvocationHandler(TestLoggingInterface testLogging) {
+            this.testLogging = testLogging;
+            this.annotatedMethods = new HashSet<>();
+
+            for (Method method : TestLoggingInterface.class.getMethods()) {
+                if (this.testLogging
+                        .getClass()
+                        .getMethod(method.getName(), method.getParameterTypes())
+                        .isAnnotationPresent(Log.class)) {
+                    this.annotatedMethods.add(method);
+                }
+            }
         }
 
-        @Override
-        public void calculation(int param1, int param2) {
-            log.info("calculation method with 2 params executed");
-        }
-
-        @Log
-        @Override
-        public void calculation(int param1, int param2, String param3) {
-            log.info("calculation method with 3 params executed");
-        }
-    }
-
-    @Slf4j
-    private record LogInvocationHandler(TestLoggingInterface testLogging) implements InvocationHandler {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (testLogging
-                            .getClass()
-                            .getMethod(method.getName(), method.getParameterTypes())
-                            .getAnnotation(Log.class)
-                    != null) {
+            if (annotatedMethods.contains(method)) {
                 log.info("executed method: {}, params: {}", method.getName(), Arrays.toString(args));
             }
 
