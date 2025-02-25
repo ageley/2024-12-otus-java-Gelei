@@ -9,9 +9,9 @@ import ru.otus.homework.exception.CassettesCapacityExceededException;
 
 public class CassetteOrderingVault implements Vault {
     @Getter
-    public final int maxCassettesCapacity;
+    private final int maxCassettesCapacity;
 
-    public final List<Cassette> cassettes;
+    private final List<Cassette> cassettes;
 
     /**
      * @param maxCassettesCapacity A maximum cassettes' capacity.
