@@ -3,6 +3,7 @@ include("hw01-gradle")
 include("hw03-generics")
 include("hw06-annotations")
 include("hw10-bytecodes")
+include("hw12-solid")
 
 
 pluginManagement {
