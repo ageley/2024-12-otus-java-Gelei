@@ -4,7 +4,7 @@ include("hw03-generics")
 include("hw06-annotations")
 include("hw10-bytecodes")
 include("hw12-solid")
-
+include("hw15-structuralPatterns")
 
 pluginManagement {
     val jgitver: String by settings
