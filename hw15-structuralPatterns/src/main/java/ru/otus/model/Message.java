@@ -1,5 +1,7 @@
 package ru.otus.model;
 
+import java.util.List;
+
 @SuppressWarnings({"java:S107", "java:S1135"})
 public class Message {
     private final long id;
@@ -45,7 +47,18 @@ public class Message {
         this.field10 = field10;
         this.field11 = field11;
         this.field12 = field12;
-        this.field13 = field13;
+        this.field13 = copyObjectForMessage(field13);
+    }
+
+    private ObjectForMessage copyObjectForMessage(ObjectForMessage objectForMessage) {
+        ObjectForMessage copy = null;
+
+        if (objectForMessage != null) {
+            copy = new ObjectForMessage();
+            copy.setData(List.copyOf(objectForMessage.getData()));
+        }
+
+        return copy;
     }
 
     public long getId() {
@@ -101,7 +114,7 @@ public class Message {
     }
 
     public ObjectForMessage getField13() {
-        return field13;
+        return copyObjectForMessage(field13);
     }
 
     @Override
