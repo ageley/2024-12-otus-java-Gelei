@@ -6,7 +6,7 @@ Run all tests:
 ../gradlew :hw15-structuralPatterns:test --rerun
 ```
 
-Run Demo:
+Run HomeWork:
 
 ```shell
 ../gradlew :hw15-structuralPatterns:run

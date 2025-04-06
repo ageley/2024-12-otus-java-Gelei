@@ -14,5 +14,5 @@ plugins {
 }
 
 application {
-    mainClass = "ru.otus.Demo"
+    mainClass = "ru.otus.HomeWork"
 }
