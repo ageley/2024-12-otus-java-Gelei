@@ -8,3 +8,11 @@ dependencies {
     testImplementation ("org.mockito:mockito-core")
     testImplementation ("org.mockito:mockito-junit-jupiter")
 }
+
+plugins {
+    id("application")
+}
+
+application {
+    mainClass = "ru.otus.Demo"
+}
