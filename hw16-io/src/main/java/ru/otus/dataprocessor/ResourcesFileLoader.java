@@ -9,7 +9,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import lombok.NonNull;
-import lombok.SneakyThrows;
 import ru.otus.model.Measurement;
 
 public class ResourcesFileLoader implements Loader {
@@ -23,14 +22,17 @@ public class ResourcesFileLoader implements Loader {
         reader = new JsonMapper().readerForListOf(Measurement.class);
     }
 
-    @SneakyThrows(IOException.class)
     @Override
     public List<Measurement> load() {
         File file = new File(getResourceUri());
-        return reader.readValue(file);
+
+        try {
+            return reader.readValue(file);
+        } catch (IOException e) {
+            throw new FileProcessException(e);
+        }
     }
 
-    @SneakyThrows(URISyntaxException.class)
     private URI getResourceUri() {
         String fullInputFilePath = RESOURCES_ROOT + fileName;
         URL resourceUrl = getClass().getResource(fullInputFilePath);
@@ -39,6 +41,10 @@ public class ResourcesFileLoader implements Loader {
             throw new FileProcessException("Resource not found: " + fullInputFilePath);
         }
 
-        return resourceUrl.toURI();
+        try {
+            return resourceUrl.toURI();
+        } catch (URISyntaxException e) {
+            throw new FileProcessException(e);
+        }
     }
 }
