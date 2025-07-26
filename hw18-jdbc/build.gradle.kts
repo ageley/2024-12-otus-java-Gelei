@@ -6,10 +6,10 @@ plugins {
 
 dependencies {
     implementation("ch.qos.logback:logback-classic")
-    implementation("org.flywaydb:flyway-core")
     implementation("com.zaxxer:HikariCP")
     implementation("org.postgresql:postgresql")
 
+    implementation("org.flywaydb:flyway-core")
     runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
     compileOnly("org.projectlombok:lombok")
@@ -29,6 +29,9 @@ tasks {
         archiveClassifier.set("")
         manifest {
             attributes(mapOf("Main-Class" to "ru.otus.HomeWork"))
+        }
+        mergeServiceFiles {
+            include("META-INF/services/*")
         }
     }
 

@@ -1,0 +1,19 @@
+services:
+
+  postgres:
+    image: postgres:17.5-alpine3.22
+    container_name: postgres
+    ports:
+      - "5430:5432"
+    environment:
+      POSTGRES_USER: usr
+      POSTGRES_PASSWORD: pwd
+      POSTGRES_DB: demoDB
+
+  orm:
+    build: ./
+    image: orm
+    container_name: orm
+    depends_on:
+      - postgres
+    command: jdbc:postgresql://postgres:5432/demoDB usr pwd
