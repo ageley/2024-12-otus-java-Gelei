@@ -12,8 +12,11 @@ import ru.otus.crm.model.Manager;
 import ru.otus.crm.service.DbServiceClientImpl;
 import ru.otus.crm.service.DbServiceManagerImpl;
 import ru.otus.jdbc.mapper.DataTemplateJdbc;
-import ru.otus.jdbc.mapper.EntityClassMetaData;
-import ru.otus.jdbc.mapper.EntitySQLMetaData;
+import ru.otus.jdbc.mapper.EntityClassMetaDataImpl;
+import ru.otus.jdbc.mapper.EntitySQLMetaDataImpl;
+import ru.otus.jdbc.mapper.mappers.ConstructorFieldsPair;
+import ru.otus.jdbc.mapper.mappers.EntityToListMapper;
+import ru.otus.jdbc.mapper.mappers.ResultSetToEntityMapper;
 
 @SuppressWarnings({"java:S125", "java:S1481"})
 public class HomeWork {
@@ -24,17 +27,26 @@ public class HomeWork {
     private static final Logger log = LoggerFactory.getLogger(HomeWork.class);
 
     public static void main(String[] args) {
+        var pgConfig = getPostgresConfig(args);
+
         // Общая часть
-        var dataSource = new DriverManagerDataSource(URL, USER, PASSWORD);
+        var dataSource = new DriverManagerDataSource(pgConfig.url, pgConfig.user, pgConfig.password);
         flywayMigrations(dataSource);
         var transactionRunner = new TransactionRunnerJdbc(dataSource);
         var dbExecutor = new DbExecutorImpl();
 
         // Работа с клиентом
-        EntityClassMetaData<Client> entityClassMetaDataClient; // = new EntityClassMetaDataImpl();
-        EntitySQLMetaData entitySQLMetaDataClient = null; // = new EntitySQLMetaDataImpl(entityClassMetaDataClient);
-        var dataTemplateClient = new DataTemplateJdbc<Client>(
-                dbExecutor, entitySQLMetaDataClient); // реализация DataTemplate, универсальная
+        var entityClassMetaDataClient = new EntityClassMetaDataImpl<>(Client.class);
+        var entitySQLMetaDataClient = new EntitySQLMetaDataImpl<>(entityClassMetaDataClient);
+        var resultSetToEntityMapperClient = new ResultSetToEntityMapper<>(new ConstructorFieldsPair<>(
+                entityClassMetaDataClient.getConstructor(), entityClassMetaDataClient.getAllFields()));
+        var entityToListMapperClient = new EntityToListMapper<Client>();
+        var dataTemplateClient = new DataTemplateJdbc<>(
+                dbExecutor,
+                entitySQLMetaDataClient,
+                resultSetToEntityMapperClient,
+                entityToListMapperClient,
+                entityClassMetaDataClient); // реализация DataTemplate, универсальная
 
         // Код дальше должен остаться
         var dbServiceClient = new DbServiceClientImpl(transactionRunner, dataTemplateClient);
@@ -48,9 +60,17 @@ public class HomeWork {
 
         // Сделайте тоже самое с классом Manager (для него надо сделать свою таблицу)
 
-        EntityClassMetaData<Manager> entityClassMetaDataManager; // = new EntityClassMetaDataImpl();
-        EntitySQLMetaData entitySQLMetaDataManager = null; // = new EntitySQLMetaDataImpl(entityClassMetaDataManager);
-        var dataTemplateManager = new DataTemplateJdbc<Manager>(dbExecutor, entitySQLMetaDataManager);
+        var entityClassMetaDataManager = new EntityClassMetaDataImpl<>(Manager.class);
+        var entitySQLMetaDataManager = new EntitySQLMetaDataImpl<>(entityClassMetaDataManager);
+        var resultSetToEntityMapperManager = new ResultSetToEntityMapper<>(new ConstructorFieldsPair<>(
+                entityClassMetaDataManager.getConstructor(), entityClassMetaDataManager.getAllFields()));
+        var entityToListMapperManager = new EntityToListMapper<Manager>();
+        var dataTemplateManager = new DataTemplateJdbc<>(
+                dbExecutor,
+                entitySQLMetaDataManager,
+                resultSetToEntityMapperManager,
+                entityToListMapperManager,
+                entityClassMetaDataManager);
 
         var dbServiceManager = new DbServiceManagerImpl(transactionRunner, dataTemplateManager);
         dbServiceManager.saveManager(new Manager("ManagerFirst"));
@@ -71,5 +91,15 @@ public class HomeWork {
         flyway.migrate();
         log.info("db migration finished.");
         log.info("***");
+    }
+
+    private record PostgresConfig(String url, String user, String password) {}
+
+    private static PostgresConfig getPostgresConfig(String[] args) {
+        if (args != null && args.length == 3) {
+            return new PostgresConfig(args[0], args[1], args[2]);
+        } else {
+            return new PostgresConfig(URL, USER, PASSWORD);
+        }
     }
 }

@@ -12,4 +12,7 @@ public interface DbExecutor {
 
     <T> Optional<T> executeSelect(
             Connection connection, String sql, List<Object> params, Function<ResultSet, T> rsHandler);
+
+    <T> List<T> executeSelectForList(
+            Connection connection, String sql, List<Object> params, Function<ResultSet, T> rsHandler);
 }

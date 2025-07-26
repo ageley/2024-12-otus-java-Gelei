@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -35,10 +36,31 @@ public class DbExecutorImpl implements DbExecutor {
                 pst.setObject(idx + 1, params.get(idx));
             }
             try (var rs = pst.executeQuery()) {
-                return Optional.ofNullable(rsHandler.apply(rs));
+                return Optional.ofNullable(rsHandler.apply(rs.next() ? rs : null));
             }
         } catch (SQLException ex) {
             throw new DataBaseOperationException("executeSelect error", ex);
+        }
+    }
+
+    @Override
+    public <T> List<T> executeSelectForList(
+            Connection connection, String sql, List<Object> params, Function<ResultSet, T> rsHandler) {
+        try (var pst = connection.prepareStatement(sql)) {
+            for (var idx = 0; idx < params.size(); idx++) {
+                pst.setObject(idx + 1, params.get(idx));
+            }
+            try (var rs = pst.executeQuery()) {
+                List<T> result = new ArrayList<>();
+
+                while (rs.next()) {
+                    result.add(rsHandler.apply(rs));
+                }
+
+                return result;
+            }
+        } catch (SQLException ex) {
+            throw new DataBaseOperationException("executeSelectForList error", ex);
         }
     }
 }
