@@ -2,6 +2,7 @@ rootProject.name = "2024-12-otus-java-Gelei"
 include("hw01-gradle")
 include("hw03-generics")
 include("hw06-annotations")
+include("hw08-gc")
 include("hw10-bytecodes")
 include("hw12-solid")
 include("hw15-structuralPatterns")
