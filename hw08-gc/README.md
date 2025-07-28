@@ -27,3 +27,16 @@ Results:
 | Before optimization | -Xms2048m -Xmx2048m | spend msec:70591, sec:70 |
 | After optimization  | -Xms256m -Xmx256m   | spend msec:42787, sec:42 |
 
+---
+
+Visualization:
+
+![graph.png](graph.png)
+
+Graph source:
+
+[graph.py](graph.py)
+
+Executable snippet:
+
+https://python-fiddle.com/saved/5e9cecc5-5de1-46d4-89f2-b35e1284f340
